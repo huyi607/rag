@@ -1,0 +1,34 @@
+version: "3.8"
+
+services:
+  # ── FastAPI 后端服务 ──
+  api:
+    build: .
+    container_name: rag-api
+    ports:
+      - "8000:8000"
+    environment:
+      # 通过 .env 文件或系统环境变量传入你的通义千问 API Key
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY}
+    volumes:claudeclaudeclaude
+      # 持久化向量数据库和聊天历史
+      - ./chromadb:/app/chromadb
+      - ./chat_history:/app/chat_history
+      - ./md5.txt:/app/md5.txt
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  # ── Streamlit 前端 ──
+  streamlit:
+    build: .
+    container_name: rag-streamlit
+    ports:
+      - "8501:8501"
+    environment:
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY}
+    volumes:
+      - ./chromadb:/app/chromadb
+      - ./chat_history:/app/chat_history
+      - ./md5.txt:/app/md5.txt
+    depends_on:
+      - api
+    command: streamlit run app_qa.py --server.port 8501 --server.address 0.0.0.0
